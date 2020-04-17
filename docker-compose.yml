@@ -1,0 +1,46 @@
+version: "3.7"
+services:
+  api:
+    image: xopera-api
+    build: .
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.api.loadbalancer.server.port=8080"
+      - "traefik.http.routers.api.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.api.entrypoints=web"
+  ui:
+    image: swaggerapi/swagger-ui:v3.25.0
+    volumes:
+      - ./openapi-spec.yml:/openapi.yml:ro
+    environment:
+      SWAGGER_JSON: /openapi.yml
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.ui.loadbalancer.server.port=8080"
+      - "traefik.http.routers.ui.rule=PathPrefix(`/ui`)"
+      - "traefik.http.routers.ui.middlewares=stripprefix-ui"
+      - "traefik.http.middlewares.stripprefix-ui.stripprefix.prefixes=/ui"
+      - "traefik.http.routers.ui.entrypoints=web"
+  proxy:
+    image: library/traefik:v2.2.0
+    command:
+      - "--accesslog=true"
+      - "--log.level=info"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+
+      # don't use the following in production scenarios!
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+      - "--entrypoints.traefik.address=:8081"
+    depends_on:
+#      - api
+      - ui
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8080:80"
+      # don't use this in production scenarios!
+      - "127.0.0.1:8081:8081"

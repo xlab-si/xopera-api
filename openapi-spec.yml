@@ -1,0 +1,128 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: xOpera API
+  license:
+    name: Apache-2.0
+paths:
+  /deploy:
+    post:
+      summary: Deploy a CSAR
+      operationId: deploy
+      requestBody:
+        description: Deployment inputs
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeploymentIO"
+          application/yaml:
+            schema:
+              $ref: "#/components/schemas/DeploymentIO"
+      responses:
+        "202":
+          description: The deployment was successfully initiated.
+        "500":
+          description: There was an error starting the deployment.
+  /undeploy:
+    post:
+      summary: Undeploy a deployment
+      operationId: undeploy
+      responses:
+        "202":
+          description: The undeploy operation was successfully initiated.
+        "500":
+          description: There was an error starting the undeploy operation.
+  /status:
+    get:
+      summary: Fetch the status of a deployment
+      operationId: status
+      responses:
+        "200":
+          description: The undeploy operation was successfully initiated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentStatus"
+            application/yaml:
+              schema:
+                $ref: "#/components/schemas/DeploymentStatus"
+  /outputs:
+    get:
+      summary: Fetch deployment outputs
+      operationId: outputs
+      responses:
+        "200":
+          description: The outputs of the deployment.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentIO"
+            application/yaml:
+              schema:
+                $ref: "#/components/schemas/DeploymentIO"
+        "404":
+          description: No outputs exist for this deployment.
+  /validate:
+    get:
+      summary: Validate a CSAR
+      operationId: validate
+      responses:
+        "200":
+          description: The validation result.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationResult"
+            application/yaml:
+              schema:
+                $ref: "#/components/schemas/ValidationResult"
+
+components:
+  schemas:
+    DeploymentIO:
+      description: Free-form mapping of inputs or outputs.
+      type: object
+    Invocation:
+      description: An invocation of the deployment
+      type: object
+      required:
+        - success
+        - timestamp
+        - output
+      properties:
+        success:
+          type: boolean
+        operation:
+          type: string
+          enum:
+            - deploy
+            - undeploy
+        timestamp:
+          description: An ISO8601 timestamp of the invocation.
+          type: string
+        errorMessage:
+          type: string
+        output:
+          type: string
+    DeploymentStatus:
+      description: The status of the deployment.
+      type: object
+      properties:
+        success:
+          description: Whether the latest invocation was successful.
+          type: boolean
+        history:
+          type: array
+          items:
+            $ref: "#/components/schemas/Invocation"
+    ValidationResult:
+      description: A CSAR validation result.
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string

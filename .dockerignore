@@ -1,0 +1,10 @@
+.venv/
+.idea/
+*.iml
+gen/
+src/opera/api/openapi/
+Dockerfile
+*.jar
+
+**/__pycache__/
+**/*.py[cod]
