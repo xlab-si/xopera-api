@@ -1,4 +1,6 @@
-opera==0.5.5
+# first commit that supports PEP420
+git+git://github.com/xlab-si/xopera-opera.git@ad9fbf4bb95c447c602622be7c629f85f963dde3#egg=opera
+
 connexion >= 2.6.0; python_version>="3.6"
 connexion >= 2.3.0; python_version=="3.5"
 connexion >= 2.3.0; python_version=="3.4"

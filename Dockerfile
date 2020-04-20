@@ -1,4 +1,4 @@
-FROM openjdk:11.0.7-jre-slim-buster as builder
+FROM openjdk:11.0.7-jre-buster as builder
 WORKDIR /build/
 COPY . /build/
 RUN /build/generate.sh
@@ -11,11 +11,12 @@ CMD ["-m", "opera.api.cli"]
 
 COPY requirements.txt /app/
 
-RUN pip3 install --no-cache-dir wheel \
-    && export CRYPTOGRAPHY_PREREQS="gcc musl-dev libffi-dev openssl-dev python3-dev" \
-    && apk add $CRYPTOGRAPHY_PREREQS \
+RUN export CRYPTOGRAPHY_PREREQS="gcc musl-dev libffi-dev openssl-dev python3-dev" \
+    && export PIP_PREREQS="git" \
+    && apk add $CRYPTOGRAPHY_PREREQS $PIP_PREREQS \
+    && pip3 install --no-cache-dir wheel \
     && pip3 install --no-cache-dir -r requirements.txt \
-    && apk del $CRYPTOGRAPHY_PREREQS \
+    && apk del $CRYPTOGRAPHY_PREREQS $PIP_PREREQS \
     && rm requirements.txt
 
 COPY --from=builder /build/src/ /app/

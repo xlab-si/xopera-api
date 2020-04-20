@@ -1,6 +1,4 @@
 from opera.api.openapi.models import DeploymentStatus, ValidationResult, Invocation
-# TODO: for both to work, delete .venv/lib/python3.7/site-packages/opera/__init__.py
-#       implicit namespace packages (PEP420) need to be used in opera core for this to work
 from opera.storage import Storage
 
 
