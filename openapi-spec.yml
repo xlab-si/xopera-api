@@ -10,18 +10,19 @@ paths:
       summary: Deploy a CSAR
       operationId: deploy
       requestBody:
-        description: Deployment inputs
+        description: Deployment inputs and service template name
         required: false
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DeploymentIO"
-          application/yaml:
-            schema:
-              $ref: "#/components/schemas/DeploymentIO"
+              $ref: "#/components/schemas/DeploymentInput"
       responses:
         "202":
           description: The deployment was successfully initiated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invocation"
         "500":
           description: There was an error starting the deployment.
   /undeploy:
@@ -31,6 +32,10 @@ paths:
       responses:
         "202":
           description: The undeploy operation was successfully initiated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invocation"
         "500":
           description: There was an error starting the undeploy operation.
   /status:
@@ -39,14 +44,31 @@ paths:
       operationId: status
       responses:
         "200":
-          description: The undeploy operation was successfully initiated.
+          description: Asynchronous operation status history.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DeploymentStatus"
-            application/yaml:
+                $ref: "#/components/schemas/InvocationHistory"
+  /status/{invocationId}:
+    parameters:
+      - name: invocationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Fetch the status of a particular invocation.
+      operationId: invocationStatus
+      responses:
+        "200":
+          description: An invocation status.
+          content:
+            application/json:
               schema:
-                $ref: "#/components/schemas/DeploymentStatus"
+                $ref: "#/components/schemas/Invocation"
+        "404":
+          description: No invocation with this id.            
   /outputs:
     get:
       summary: Fetch deployment outputs
@@ -57,16 +79,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DeploymentIO"
-            application/yaml:
-              schema:
-                $ref: "#/components/schemas/DeploymentIO"
+                $ref: "#/components/schemas/DeploymentOutput"
         "404":
           description: No outputs exist for this deployment.
   /validate:
-    get:
+    post:
       summary: Validate a CSAR
       operationId: validate
+      requestBody:
+        description: Validation inputs and service template name
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeploymentInput"
       responses:
         "200":
           description: The validation result.
@@ -74,25 +100,36 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationResult"
-            application/yaml:
-              schema:
-                $ref: "#/components/schemas/ValidationResult"
-
+        "500":
+          description: There was an error starting validate operation.
 components:
   schemas:
-    DeploymentIO:
-      description: Free-form mapping of inputs or outputs.
+    DeploymentInput:
+      description: Inputs and service template name for deploy and validate commands.
+      type: object
+      required:
+        - service_template
+      properties:
+        inputs:
+          type: object
+        service_template:
+          type: string
+    DeploymentOutput:
+      description: Free-form mapping of outputs.
       type: object
     Invocation:
       description: An invocation of the deployment
       type: object
       required:
-        - success
+        - id
+        - state
         - timestamp
-        - output
+        - console_output
       properties:
-        success:
-          type: boolean
+        id:
+          type: string
+        state:
+          $ref: "#/components/schemas/InvocationState"
         operation:
           type: string
           enum:
@@ -101,21 +138,25 @@ components:
         timestamp:
           description: An ISO8601 timestamp of the invocation.
           type: string
-        errorMessage:
+        inputs:
+          description: Inputs provided for invocation
+          type: object
+        instance_state:
+          description: State of the instances defined in service template
+          type: object
+          additionalProperties:
+            type: string        
+        exception:
+          description: An internal xOpera error that occurred starting operation
           type: string
-        output:
+        console_output:
+          description: xOpera console output for operation
           type: string
-    DeploymentStatus:
-      description: The status of the deployment.
-      type: object
-      properties:
-        success:
-          description: Whether the latest invocation was successful.
-          type: boolean
-        history:
-          type: array
-          items:
-            $ref: "#/components/schemas/Invocation"
+    InvocationHistory:
+      description: Invocation history ordered by timestamp ascending.
+      type: array
+      items:
+        $ref: "#/components/schemas/Invocation"
     ValidationResult:
       description: A CSAR validation result.
       type: object
@@ -126,3 +167,9 @@ components:
           type: boolean
         message:
           type: string
+    InvocationState:
+      type: string
+      enum:
+        - success
+        - failed
+        - in_progress         
