@@ -48,3 +48,32 @@ cd src/
 python3 -m opera.api.cli
 curl localhost:8080
 ```
+
+## Building for PyPI, releases
+
+* Generate sources with `./generate.sh`.
+* Test built packages in a Docker container.
+* Only release tags without any local changes present.
+* Manually create and upload releases onto GitHub, no automation for that.
+* Build and test before pushing tags to reduce rollbacks.
+
+```bash
+pip3 install -r requirements.txt
+./generate.sh
+git tag -a 1.2.3 -m 1.2.3
+
+rm -rfv dist/
+python setup.py sdist bdist_wheel
+
+docker run -it --rm -v $(realpath ./dist/):/dist/:ro python:3.8-buster bash
+    pip3 install dist/*.whl
+    opera-api
+    pip3 uninstall -y opera-api
+    pip3 install dist/*.tar.gz
+    opera-api
+
+twine upload --repository <pypi|testpypi> dist/*
+# upload to github manually
+
+git push --tags
+```
