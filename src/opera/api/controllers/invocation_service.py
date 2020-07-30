@@ -1,29 +1,31 @@
-import os
 import json
+import os
 import threading
 from datetime import datetime
 from pathlib import Path
+
+from opera.commands import deploy, undeploy
+
 from opera.api.controllers import utils
-from opera.api.openapi.models import \
-        Invocation, \
-        InvocationState
-from opera.commands import \
-    undeploy as undeploy_command, \
-    deploy as deploy_command
+from opera.api.log import get_logger
+from opera.api.openapi.models import Invocation, InvocationState
 
 # folder name to store invocation results
 INVOCATION_STORAGE_FOLDER_NAME = '.opera-api'
 
+logger = get_logger(__name__)
+
 
 class InvocationService(object):
-
     outputs = {}
 
     def background_function(self, func, args):
+        logger.debug("Invoking background function.")
         invocation_thread = threading.Thread(target=func, args=[args])
         invocation_thread.start()
 
     def run_invocation(self, func, args, command_name):
+        logger.info("Running invocation: %s", command_name)
         with utils.CaptureString() as output:
             try:
                 self.outputs[args.uid] = output
@@ -49,10 +51,10 @@ class InvocationService(object):
                 self.outputs.pop(args.uid)
 
     def run_deployment(self, args):
-        self.run_invocation(deploy_command.deploy, args, 'deploy')
+        self.run_invocation(deploy.deploy, args, 'deploy')
 
     def run_undeployment(self, args):
-        self.run_invocation(undeploy_command.undeploy, args, 'undeploy')
+        self.run_invocation(undeploy.undeploy, args, 'undeploy')
 
     def prepare_deploy(self, deployment_input):
         # opera will save files to the current working directory
@@ -88,6 +90,7 @@ class InvocationService(object):
             self, command_args, state,
             operation, console_output,
             instance_state=None, error=None):
+        logger.info("Saving invocation: %s", operation)
         invocation = Invocation(
             command_args.uid, state, operation,
             command_args.timestamp, command_args.inputs,
@@ -108,9 +111,12 @@ class InvocationService(object):
         return invocation
 
     def load_invocation_history(self):
+        logger.info("Loading invocation history.")
+
         invocations = []
         utils.change_current_dir()
         for file_path in Path(INVOCATION_STORAGE_FOLDER_NAME).glob('*.json'):
+            logger.debug(file_path)
             invocation = Invocation.from_dict(json.load(open(file_path, 'r')))
             invocations.append(invocation)
 
@@ -124,9 +130,11 @@ class InvocationService(object):
             )
 
         for invocation in invocations:
+            logger.debug(invocation)
             if invocation.state == InvocationState.IN_PROGRESS:
                 invocation.instance_state = utils.get_instance_state()
-                invocation.output = '' if invocation.id not in self.outputs \
+                invocation.output = '' \
+                    if invocation.id not in self.outputs \
                     else self.outputs[invocation.id].get_value()
 
         return invocations

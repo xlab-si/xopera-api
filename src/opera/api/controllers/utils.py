@@ -1,15 +1,15 @@
-import os
 import json
+import os
 import sys
 import uuid
 from datetime import datetime, timezone
 from io import StringIO
-from opera.api.openapi.models import \
-        ValidationResult
 from pathlib import Path
 
+from opera.api.openapi.models import ValidationResult
 
 DEFAULT_TEMPLATE_LOCATION_PATH = ''
+
 
 class CommandArgs(object):
     def __init__(self, command_inputs=None, output_format=None):
@@ -41,7 +41,7 @@ class CaptureString(object):
 
     def __exit__(self, *args):
         self.value = self._stringio.getvalue()
-        del self._stringio    # free up some memory
+        del self._stringio  # free up some memory
         sys.stdout = self._stdout
 
     def get_value(self):

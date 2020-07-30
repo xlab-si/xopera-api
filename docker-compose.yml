@@ -3,6 +3,8 @@ services:
   api:
     image: xopera-api
     build: .
+    environment:
+      DEBUG: "true"
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.api.loadbalancer.server.port=8080"
