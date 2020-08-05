@@ -1,85 +1,85 @@
-import json
+from opera.commands.outputs import outputs as opera_outputs
+from opera.commands.validate import validate as opera_validate
+from opera.storage import Storage
 
-import connexion
-from opera.commands import outputs as output_command
-from opera.commands import validate as validate_command
-
-from opera.api.controllers import utils
-from opera.api.controllers.invocation_service import InvocationService
+from opera.api.controllers.background_invocation import InvocationService, opera_deploy_storage_proxy, \
+    opera_undeploy_storage_proxy
 from opera.api.log import get_logger
+from opera.api.openapi.models import ValidationResult, OperationType
 from opera.api.openapi.models.deployment_input import DeploymentInput
 
 logger = get_logger(__name__)
+
+# must be created (pool) _after_ any functions are referenced, otherwise AttributeError: can't get attribute
 invocation_service = InvocationService()
 
 
-def deploy(deployment_input=None):
+def deploy(body: DeploymentInput = None):
     logger.debug("Entry: deploy")
+    logger.debug(body)
 
-    if connexion.request.is_json:
-        jayson = connexion.request.get_json()
-        logger.debug("Request has json: ", str(jayson))
-        deployment_input = DeploymentInput.from_dict(jayson)
+    deployment_input = DeploymentInput.from_dict(body)
+    result = invocation_service.invoke(
+        opera_deploy_storage_proxy, [deployment_input.service_template, deployment_input.inputs, 1],
+        OperationType.DEPLOY, deployment_input.inputs
+    )
 
-    args, invocation = invocation_service.prepare_deploy(deployment_input)
-    invocation_service.background_function(invocation_service.run_deployment, args=args)
-
-    return invocation, 200
+    return result, 200
 
 
 def undeploy():
     logger.debug("Entry: undeploy")
 
-    args, invocation = invocation_service.prepare_undeploy()
-    invocation_service.background_function(invocation_service.run_undeployment, args=args)
+    result = invocation_service.invoke(
+        opera_undeploy_storage_proxy, [1],
+        OperationType.UNDEPLOY, None
+    )
 
-    return invocation, 200
+    return result, 200
 
 
 def outputs():
     logger.debug("Entry: outputs")
 
-    args = invocation_service.prepare_outputs()
     try:
-        with utils.CaptureString() as output:
-            output_command.outputs(args)
-        return json.loads(output.value), 200
+        opera_storage = Storage.create()
+        result = opera_outputs(opera_storage)
     except Exception as e:
         logger.error("Error getting outputs.", e)
+        return {"message": str(e)}, 500
+
+    if not result:
         return {"message": "No outputs exist for this deployment."}, 404
+    return result, 200
 
 
 def status():
-    logger.debug("Entry: outputs")
-
-    return invocation_service.load_invocation_history(), 200
+    logger.debug("Entry: status")
+    history = invocation_service.invocation_history()
+    return history, 200
 
 
 def invocation_status(invocation_id):
     logger.debug("Entry: invocation_status")
-
-    service = InvocationService()
-    response = service.load_invocation_status(invocation_id)
-    if response:
-        return response, 200
-    else:
+    history = invocation_service.invocation_history()
+    try:
+        return next(inv for inv in history if inv.id == invocation_id), 200
+    except StopIteration:
         return {"message": "No invocation with id {}".format(invocation_id)}, 404
 
 
-def validate(deployment_input=None):
+def validate(body: DeploymentInput = None):
     logger.debug("Entry: validate")
+    logger.debug(body)
 
-    if connexion.request.is_json:
-        jayson = connexion.request.get_json()
-        logger.debug("Request has json: ", str(jayson))
-        deployment_input = DeploymentInput.from_dict(jayson)
+    deployment_input = DeploymentInput.from_dict(body)
 
-    args, invocation = invocation_service.prepare_deploy(deployment_input)
-
+    result = ValidationResult()
     try:
-        with utils.CaptureString() as output:
-            validate_command.validate(args)
-        return utils.get_validation_result(output), 200
+        opera_validate(deployment_input.service_template, deployment_input.inputs)
+        result.success = True
     except Exception as e:
-        logger.error("Validation error.", e)
-        return str(e), 500
+        result.success = False
+        result.message = str(e)
+
+    return result, 200

@@ -33,7 +33,14 @@ With Docker:
 
 ```shell script
 docker-compose up --build
-curl localhost:8080
+docker cp test.csar xopera-api_api_1:/app/
+docker exec xopera-api_api_1 unzip test.csar
+# prepare request inputs: service_template, inputs (in JSON object form, not a string)
+curl -XPOST localhost:8080/validate -H "Content-Type: application/json" -d @inputs-request.json
+curl -XPOST localhost:8080/deploy -H "Content-Type: application/json" -d @inputs-request.json
+curl localhost:8080/status
+curl localhost:8080/outputs
+curl -XPOST localhost:8080/undeploy
 ```
 
 With a local development installation:
