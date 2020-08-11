@@ -1,5 +1,4 @@
-# first commit with the new decoupled API
-git+git://github.com/xlab-si/xopera-opera.git@d8aa1d09e6b352854ae24f9f54f57c01f65a7add#egg=opera
+opera==0.5.9
 
 connexion >= 2.6.0; python_version>="3.6"
 connexion >= 2.3.0; python_version=="3.5"

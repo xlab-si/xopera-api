@@ -58,6 +58,7 @@ curl localhost:8080
 
 ## Building for PyPI, releases
 
+* If the `opera` dependency version has changed, you **must** reflect that change in `setup.cfg`.
 * Generate sources with `./generate.sh`.
 * Test built packages in a Docker container.
 * Only release tags without any local changes present.
