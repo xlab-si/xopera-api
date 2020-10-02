@@ -12,7 +12,7 @@ services:
       - "traefik.http.routers.api.rule=PathPrefix(`/`)"
       - "traefik.http.routers.api.entrypoints=web"
   ui:
-    image: swaggerapi/swagger-ui:v3.25.0
+    image: swaggerapi/swagger-ui:v3.35.0
     volumes:
       - ./openapi-spec.yml:/openapi.yml:ro
     environment:
@@ -25,7 +25,7 @@ services:
       - "traefik.http.middlewares.stripprefix-ui.stripprefix.prefixes=/ui"
       - "traefik.http.routers.ui.entrypoints=web"
   proxy:
-    image: library/traefik:v2.2.0
+    image: library/traefik:v2.3.1
     command:
       - "--accesslog=true"
       - "--log.level=info"

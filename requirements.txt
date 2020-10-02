@@ -1,10 +1,10 @@
 opera==0.5.9
 
-connexion >= 2.6.0; python_version>="3.6"
+connexion >= 2.7.0; python_version>="3.6"
 connexion >= 2.3.0; python_version=="3.5"
 connexion >= 2.3.0; python_version=="3.4"
 connexion == 2.4.0; python_version<="2.7"
-python_dateutil >= 2.6.0
+python-dateutil >= 2.8.1
 tornado==6.0.4
 
 twine

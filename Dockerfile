@@ -1,10 +1,10 @@
-FROM openjdk:11.0.7-jre-buster as builder
+FROM openjdk:11.0.8-jre-buster as builder
 WORKDIR /build/
 COPY . /build/
 RUN /build/generate.sh
 
 
-FROM python:3.8.2-alpine3.11
+FROM python:3.8.6-alpine3.12
 WORKDIR /app
 ENTRYPOINT ["python3"]
 CMD ["-m", "opera.api.cli"]
