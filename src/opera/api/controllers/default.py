@@ -1,16 +1,16 @@
+import traceback
+
 from opera.commands.outputs import outputs as opera_outputs
 from opera.commands.validate import validate as opera_validate
 from opera.storage import Storage
 
-from opera.api.controllers.background_invocation import InvocationService, opera_deploy_storage_proxy, \
-    opera_undeploy_storage_proxy
+from opera.api.controllers.background_invocation import InvocationService
 from opera.api.log import get_logger
 from opera.api.openapi.models import ValidationResult, OperationType
 from opera.api.openapi.models.deployment_input import DeploymentInput
 
 logger = get_logger(__name__)
 
-# must be created (pool) _after_ any functions are referenced, otherwise AttributeError: can't get attribute
 invocation_service = InvocationService()
 
 
@@ -19,22 +19,14 @@ def deploy(body: DeploymentInput = None):
     logger.debug(body)
 
     deployment_input = DeploymentInput.from_dict(body)
-    result = invocation_service.invoke(
-        opera_deploy_storage_proxy, [deployment_input.service_template, deployment_input.inputs, 1],
-        OperationType.DEPLOY, deployment_input.inputs
-    )
-
+    result = invocation_service.invoke(OperationType.DEPLOY, deployment_input.service_template, deployment_input.inputs)
     return result, 200
 
 
 def undeploy():
     logger.debug("Entry: undeploy")
 
-    result = invocation_service.invoke(
-        opera_undeploy_storage_proxy, [1],
-        OperationType.UNDEPLOY, None
-    )
-
+    result = invocation_service.invoke(OperationType.UNDEPLOY, None, None)
     return result, 200
 
 
@@ -80,6 +72,6 @@ def validate(body: DeploymentInput = None):
         result.success = True
     except Exception as e:
         result.success = False
-        result.message = str(e)
+        result.message = "{}: {}\n\n{}".format(e.__class__.__name__, str(e), traceback.format_exc())
 
     return result, 200

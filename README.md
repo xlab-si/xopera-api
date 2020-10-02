@@ -7,6 +7,8 @@ WIP.
 
 ## Development
 
+Requires Python >= 3.7.
+
 To begin:
 
 ```shell script
@@ -32,9 +34,10 @@ java -jar openapi-generator-cli-4.3.0.jar config-help --generator-name python-fl
 With Docker:
 
 ```shell script
-docker-compose up --build
+docker-compose up --build -d
 docker cp test.csar xopera-api_api_1:/app/
 docker exec xopera-api_api_1 unzip test.csar
+docker logs -f xopera-api_api_1
 # prepare request inputs: service_template, inputs (in JSON object form, not a string)
 curl -XPOST localhost:8080/validate -H "Content-Type: application/json" -d @inputs-request.json
 curl -XPOST localhost:8080/deploy -H "Content-Type: application/json" -d @inputs-request.json
