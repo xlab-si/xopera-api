@@ -43,6 +43,7 @@ curl -XPOST localhost:8080/validate -H "Content-Type: application/json" -d @inpu
 curl -XPOST localhost:8080/deploy -H "Content-Type: application/json" -d @inputs-request.json
 curl localhost:8080/status
 curl localhost:8080/outputs
+curl localhost:8080/info
 curl -XPOST localhost:8080/undeploy
 ```
 

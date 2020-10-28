@@ -1,5 +1,6 @@
 import traceback
 
+from opera.commands.info import info as opera_info
 from opera.commands.outputs import outputs as opera_outputs
 from opera.commands.validate import validate as opera_validate
 from opera.storage import Storage
@@ -73,5 +74,17 @@ def validate(body: DeploymentInput = None):
     except Exception as e:
         result.success = False
         result.message = "{}: {}\n\n{}".format(e.__class__.__name__, str(e), traceback.format_exc())
+
+    return result, 200
+
+
+def info():
+    logger.debug("Entry: info")
+
+    try:
+        opera_storage = Storage.create()
+        result = opera_info(opera_storage)
+    except Exception as e:
+        return {"message": "General error: {}".format(str(e))}, 500
 
     return result, 200

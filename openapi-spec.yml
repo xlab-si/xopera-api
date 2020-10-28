@@ -102,6 +102,19 @@ paths:
                 $ref: "#/components/schemas/ValidationResult"
         "500":
           description: There was an error starting validate operation.
+  /info:
+    get:
+      summary: Get information about the current opera environment
+      operationId: info
+      responses:
+        "200":
+          description: The opera environment operation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Info"
+        "500":
+          description: General error.
 components:
   schemas:
     DeploymentInput:
@@ -131,7 +144,7 @@ components:
         state:
           $ref: "#/components/schemas/InvocationState"
         operation:
-          type: OperationType
+          $ref: "#/components/schemas/OperationType"
         timestamp:
           description: An ISO8601 timestamp of the invocation.
           type: string
@@ -169,6 +182,18 @@ components:
         success:
           type: boolean
         message:
+          type: string
+    Info:
+      description: Information about an opera environment.
+      type: object
+      properties:
+        service_template:
+          type: string
+        content_root:
+          type: string
+        inputs:
+          type: object
+        status:
           type: string
     InvocationState:
       type: string
