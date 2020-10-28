@@ -69,7 +69,7 @@ curl localhost:8080
 * Manually create and upload releases onto GitHub, no automation for that.
 * Build and test before pushing tags to reduce rollbacks.
 
-```bash
+```shell script
 pip3 install -r requirements.txt
 ./generate.sh
 git tag -a 1.2.3 -m 1.2.3
