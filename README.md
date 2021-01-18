@@ -77,12 +77,24 @@ git tag -a 1.2.3 -m 1.2.3
 rm -rfv dist/
 python setup.py sdist bdist_wheel
 
-docker run -it --rm -v $(realpath ./dist/):/dist/:ro python:3.8-buster bash
-    pip3 install dist/*.whl
+docker run -it --rm \
+    -v $(realpath ./dist/):/dist/:ro \
+    -v $(realpath ./test.csar):/test.csar:ro \
+    -v $(realpath ./test-inputs-request.json):/test/test-inputs-request.json:ro \
+    python:3.8-buster bash
+    
+    unzip -d /test/ /test.csar && cd /test/
+    pip3 install /dist/*.whl
     opera-api
     pip3 uninstall -y opera-api
-    pip3 install dist/*.tar.gz
-    opera-api
+    pip3 install /dist/*.tar.gz
+    opera-api &
+
+    curl localhost:8080/info
+    curl -XPOST localhost:8080/deploy -H "Content-Type: application/json" -d @/test/test-inputs-request.json
+    curl localhost:8080/status
+    curl localhost:8080/outputs
+    curl -XPOST localhost:8080/undeploy
 
 twine upload --repository <pypi|testpypi> dist/*
 # upload to github manually

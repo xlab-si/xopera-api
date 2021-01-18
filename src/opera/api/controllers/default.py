@@ -1,13 +1,18 @@
 import traceback
+from pathlib import PurePath
 
 from opera.commands.info import info as opera_info
+from opera.commands.init import init_compressed_csar as opera_init_compressed_csar
 from opera.commands.outputs import outputs as opera_outputs
-from opera.commands.validate import validate as opera_validate
+from opera.commands.package import package as opera_package
+from opera.commands.unpackage import unpackage as opera_unpackage
+from opera.commands.validate import validate_service_template as opera_validate
 from opera.storage import Storage
 
 from opera.api.controllers.background_invocation import InvocationService
 from opera.api.log import get_logger
-from opera.api.openapi.models import ValidationResult, OperationType
+from opera.api.openapi.models import ValidationResult, OperationType, CsarInitializationInput, PackagingInput, \
+    UnpackagingInput, PackagingResult, Info
 from opera.api.openapi.models.deployment_input import DeploymentInput
 
 logger = get_logger(__name__)
@@ -83,8 +88,49 @@ def info():
 
     try:
         opera_storage = Storage.create()
-        result = opera_info(opera_storage)
+        result = opera_info(PurePath("."), opera_storage)
     except Exception as e:
         return {"message": "General error: {}".format(str(e))}, 500
 
-    return result, 200
+    serialized = Info(
+        service_template=str(result["service_template"]),
+        content_root=str(result["content_root"]),
+        inputs=result["inputs"],
+        status=result["status"]
+    )
+
+    return serialized, 200
+
+
+def init(csar_initialization_input: CsarInitializationInput):
+    logger.debug("Entry: init")
+
+    try:
+        opera_storage = Storage.create()
+        opera_init_compressed_csar(".", csar_initialization_input.inputs,
+                                   opera_storage, csar_initialization_input.clean)
+        return {"success": True, "message": ""}, 200
+    except Exception as e:
+        return {"success": False, "message": "General error: {}".format(str(e))}, 500
+
+
+def package(packaging_input: PackagingInput):
+    logger.debug("Entry: package")
+
+    try:
+        path = opera_package(packaging_input.service_template_folder, packaging_input.output,
+                             packaging_input.service_template, str(packaging_input.format))
+        result = PackagingResult(path)
+        return result, 200
+    except Exception as e:
+        return {"success": False, "message": "General error: {}".format(str(e))}, 500
+
+
+def unpackage(unpackaging_input: UnpackagingInput):
+    logger.debug("Entry: package")
+
+    try:
+        opera_unpackage(unpackaging_input.csar, unpackaging_input.destination, "")
+        return {"success": True, "message": ""}, 200
+    except Exception as e:
+        return {"success": False, "message": "General error: {}".format(str(e))}, 500

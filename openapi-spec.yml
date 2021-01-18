@@ -1,6 +1,6 @@
 openapi: "3.0.0"
 info:
-  version: 0.2.1
+  version: 0.3.0
   title: xOpera API
   license:
     name: Apache-2.0
@@ -115,8 +115,81 @@ paths:
                 $ref: "#/components/schemas/Info"
         "500":
           description: General error.
+  /init:
+    post:
+      deprecated: true
+      summary: Initialize the CSAR for deployment. Deprecated in favour of unpacking and deploying the CSAR.
+      operationId: init
+      requestBody:
+        description: CSAR initialization parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CsarInitializationInput"
+      responses:
+        "200":
+          description: CSAR successfully initialized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperationSuccess"
+        "500":
+          description: General error.
+  /package:
+    post:
+      summary: Generate a CSAR from a working directory.
+      operationId: package
+      requestBody:
+        description: CSAR packaging parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PackagingInput"
+      responses:
+        "200":
+          description: Packaging successful.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PackagingResult"
+        "500":
+          description: General error.
+  /unpackage:
+    post:
+      summary: Unpackage a CSAR.
+      operationId: unpackage
+      requestBody:
+        description: CSAR unpackaging parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnpackagingInput"
+      responses:
+        "200":
+          description: Unpackaging successful.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperationSuccess"
+        "500":
+          description: General error.
+
+
 components:
   schemas:
+    CsarInitializationInput:
+      description: Inputs and service template name for deploy and validate commands.
+      type: object
+      required:
+        - clean
+      properties:
+        inputs:
+          type: object
+        clean:
+          type: boolean
     DeploymentInput:
       description: Inputs and service template name for deploy and validate commands.
       type: object
@@ -207,3 +280,51 @@ components:
       enum:
         - deploy
         - undeploy
+    OperationSuccess:
+      description: A general success message.
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+    PackagingInput:
+      description: Packaging parameters.
+      type: object
+      required:
+        - format
+        - service_template_folder
+      properties:
+        output:
+          type: string
+        format:
+          $ref: "#/components/schemas/OperationType"
+        service_template:
+          type: string
+        service_template_folder:
+          type: string
+    PackagingFormat:
+      type: string
+      enum:
+        - zip
+        - tar
+    PackagingResult:
+      description: A general success message.
+      type: object
+      required:
+        - package_path
+      properties:
+        package_path:
+          type: string
+    UnpackagingInput:
+      description: Unpackaging parameters.
+      type: object
+      required:
+        - csar
+      properties:
+        destination:
+          type: string
+        csar:
+          type: string

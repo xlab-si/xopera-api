@@ -1,4 +1,4 @@
-opera==0.6.2
+opera==0.6.4
 
 connexion >= 2.7.0; python_version>="3.6"
 connexion >= 2.3.0; python_version=="3.5"
