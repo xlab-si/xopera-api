@@ -1,0 +1,6 @@
+FROM library/alpine:3.13.3
+WORKDIR /test/
+ENTRYPOINT ["/bin/sh"]
+CMD ["-c", "sleep 600"]
+
+RUN apk add curl zip

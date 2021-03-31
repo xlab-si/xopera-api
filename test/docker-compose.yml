@@ -1,0 +1,18 @@
+version: "3.7"
+services:
+  api:
+    image: xopera-api
+    build: ..
+    environment:
+      DEBUG: "true"
+      LOG_LEVEL: debug
+
+  control:
+    image: xopera-api-control
+    build:
+      context: .
+      dockerfile: Dockerfile-control
+    volumes:
+      - "./:/test/"
+    depends_on:
+      - api

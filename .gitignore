@@ -4,7 +4,6 @@
 gen/
 src/opera/api/openapi/
 *.jar
-test*
 
 ### Python ###
 __pycache__/

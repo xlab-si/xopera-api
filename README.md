@@ -64,7 +64,7 @@ curl localhost:8080
 
 * If the `opera` dependency version has changed, you **must** reflect that change in `setup.cfg`.
 * Generate sources with `./generate.sh`.
-* Test built packages in a Docker container.
+* Test with `./test.sh`
 * Only release tags without any local changes present.
 * Manually create and upload releases onto GitHub, no automation for that.
 * Build and test before pushing tags to reduce rollbacks.
@@ -72,30 +72,11 @@ curl localhost:8080
 ```shell script
 pip3 install -r requirements.txt
 ./generate.sh
+./test.sh
 git tag -a 1.2.3 -m 1.2.3
 
 rm -rfv dist/
 python setup.py sdist bdist_wheel
-
-docker run -it --rm \
-    -v $(realpath ./dist/):/dist/:ro \
-    -v $(realpath ./test.csar):/test.csar:ro \
-    -v $(realpath ./test-inputs-request.json):/test/test-inputs-request.json:ro \
-    python:3.8-buster bash
-    
-    unzip -d /test/ /test.csar && cd /test/
-    pip3 install /dist/*.whl
-    opera-api
-    pip3 uninstall -y opera-api
-    pip3 install /dist/*.tar.gz
-    opera-api &
-
-    curl localhost:8080/info
-    curl -XPOST localhost:8080/deploy -H "Content-Type: application/json" -d @/test/test-inputs-request.json
-    curl localhost:8080/status
-    curl localhost:8080/outputs
-    curl -XPOST localhost:8080/undeploy
-
 twine upload --repository <pypi|testpypi> dist/*
 # upload to github manually
 

@@ -1,3 +1,4 @@
+.git/
 .venv/
 .idea/
 *.iml
@@ -5,6 +6,9 @@ gen/
 src/opera/api/openapi/
 Dockerfile
 *.jar
+
+test/
+test.sh
 
 **/__pycache__/
 **/*.py[cod]
