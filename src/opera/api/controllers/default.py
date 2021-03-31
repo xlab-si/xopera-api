@@ -36,6 +36,14 @@ def undeploy():
     return result, 200
 
 
+def notify(trigger_name: str, body: bytes = None):
+    logger.debug("Entry: notify")
+    logger.debug("Body: %s", body.decode("UTF-8"))
+
+    result = invocation_service.invoke(OperationType.NOTIFY, trigger_name, body.decode("UTF-8"))
+    return result, 200
+
+
 def outputs():
     logger.debug("Entry: outputs")
 
@@ -130,7 +138,7 @@ def unpackage(unpackaging_input: UnpackagingInput):
     logger.debug("Entry: package")
 
     try:
-        opera_unpackage(unpackaging_input.csar, unpackaging_input.destination, "")
+        opera_unpackage(unpackaging_input.csar, unpackaging_input.destination)
         return {"success": True, "message": ""}, 200
     except Exception as e:
         return {"success": False, "message": "General error: {}".format(str(e))}, 500

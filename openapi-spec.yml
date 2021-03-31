@@ -1,6 +1,6 @@
 openapi: "3.0.0"
 info:
-  version: 0.3.0
+  version: 0.4.0
   title: xOpera API
   license:
     name: Apache-2.0
@@ -176,6 +176,31 @@ paths:
                 $ref: "#/components/schemas/OperationSuccess"
         "500":
           description: General error.
+  /notify/{triggerName}:
+    parameters:
+      - name: triggerName
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      summary: Do a notification.
+      operationId: notify
+      requestBody:
+        required: false
+        content:
+          text/plain:
+            schema:
+              type: string
+      responses:
+        "200":
+          description: Trigger triggered.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperationSuccess"
+        "500":
+          description: General error.
 
 
 components:
@@ -280,6 +305,7 @@ components:
       enum:
         - deploy
         - undeploy
+        - notify
     OperationSuccess:
       description: A general success message.
       type: object

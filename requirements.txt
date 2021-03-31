@@ -1,4 +1,6 @@
-opera==0.6.4
+opera==0.6.5
+# enable building on alpine by avoiding rust
+cryptography==3.3.2
 
 connexion >= 2.7.0; python_version>="3.6"
 connexion >= 2.3.0; python_version=="3.5"

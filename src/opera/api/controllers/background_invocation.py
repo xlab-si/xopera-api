@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from opera.commands.deploy import deploy_service_template as opera_deploy
+from opera.commands.notify import notify as opera_notify
 from opera.commands.undeploy import undeploy as opera_undeploy
 from opera.storage import Storage
 
@@ -48,6 +49,9 @@ class InvocationWorkerProcess(multiprocessing.Process):
                     InvocationWorkerProcess._deploy(inv.service_template, inv.inputs, num_workers=1)
                 elif inv.operation == OperationType.UNDEPLOY:
                     InvocationWorkerProcess._undeploy(num_workers=1)
+                elif inv.operation == OperationType.NOTIFY:
+                    # we abuse service_template and inputs a bit, but they match
+                    InvocationWorkerProcess._notify(inv.service_template, inv.inputs)
                 else:
                     raise RuntimeError("Unknown operation type:" + str(inv.operation))
 
@@ -58,6 +62,10 @@ class InvocationWorkerProcess(multiprocessing.Process):
                 inv.state = InvocationState.FAILED
                 inv.exception = "{}: {}\n\n{}".format(e.__class__.__name__, str(e), traceback.format_exc())
 
+            file_stdout.flush()
+            os.fsync(file_stdout.fileno())
+            file_stderr.flush()
+            os.fsync(file_stderr.fileno())
             instance_state = InvocationService.get_instance_state()
             stdout = InvocationWorkerProcess.read_file(InvocationWorkerProcess.IN_PROGRESS_STDOUT_FILE)
             stderr = InvocationWorkerProcess.read_file(InvocationWorkerProcess.IN_PROGRESS_STDERR_FILE)
@@ -81,6 +89,12 @@ class InvocationWorkerProcess(multiprocessing.Process):
         opera_undeploy(opera_storage, verbose_mode=True, num_workers=num_workers)
 
     @staticmethod
+    def _notify(event_name: str, notification_contents: Optional[str]):
+        opera_storage = Storage.create()
+        opera_notify(opera_storage, verbose_mode=True,
+                     trigger_name_or_event=event_name, notification_file_contents=notification_contents)
+
+    @staticmethod
     def read_file(filename):
         with open(filename, "r") as f:
             return f.read()
@@ -92,7 +106,7 @@ class InvocationService:
         self.worker = InvocationWorkerProcess(self.work_queue)
         self.worker.start()
 
-    def invoke(self, operation_type: OperationType, service_template: Optional[str], inputs: Optional[dict]) \
+    def invoke(self, operation_type: OperationType, service_template: Optional[str], inputs: Optional[any]) \
             -> Invocation:
         invocation_uuid = str(uuid.uuid4())
         now = datetime.datetime.now(tz=datetime.timezone.utc)
