@@ -46,7 +46,8 @@ class InvocationWorkerProcess(multiprocessing.Process):
 
             try:
                 if inv.operation == OperationType.DEPLOY:
-                    InvocationWorkerProcess._deploy(inv.service_template, inv.inputs, num_workers=1)
+                    InvocationWorkerProcess._deploy(inv.service_template, inv.inputs, num_workers=1,
+                                                    clean_state=inv.clean_state)
                 elif inv.operation == OperationType.UNDEPLOY:
                     InvocationWorkerProcess._undeploy(num_workers=1)
                 elif inv.operation == OperationType.NOTIFY:
@@ -78,10 +79,10 @@ class InvocationWorkerProcess(multiprocessing.Process):
             InvocationService.write_invocation(inv)
 
     @staticmethod
-    def _deploy(service_template: str, inputs: typing.Optional[dict], num_workers: int):
+    def _deploy(service_template: str, inputs: typing.Optional[dict], num_workers: int, clean_state: bool):
         opera_storage = Storage.create()
         opera_deploy(service_template, inputs, opera_storage,
-                     verbose_mode=True, num_workers=num_workers, delete_existing_state=False)
+                     verbose_mode=True, num_workers=num_workers, delete_existing_state=clean_state)
 
     @staticmethod
     def _undeploy(num_workers: int):
@@ -106,8 +107,8 @@ class InvocationService:
         self.worker = InvocationWorkerProcess(self.work_queue)
         self.worker.start()
 
-    def invoke(self, operation_type: OperationType, service_template: Optional[str], inputs: Optional[any]) \
-            -> Invocation:
+    def invoke(self, operation_type: OperationType, service_template: Optional[str], inputs: Optional[any],
+               clean_state: Optional[bool]) -> Invocation:
         invocation_uuid = str(uuid.uuid4())
         now = datetime.datetime.now(tz=datetime.timezone.utc)
         logger.info("Invoking %s with ID %s at %s", operation_type, invocation_uuid, now.isoformat())
@@ -119,6 +120,7 @@ class InvocationService:
         inv.timestamp = now.isoformat()
         inv.service_template = service_template
         inv.inputs = inputs
+        inv.clean_state = clean_state or False
         inv.instance_state = None
         inv.exception = None
         inv.stdout = None

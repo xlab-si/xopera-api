@@ -25,14 +25,15 @@ def deploy(body: DeploymentInput = None):
     logger.debug(body)
 
     deployment_input = DeploymentInput.from_dict(body)
-    result = invocation_service.invoke(OperationType.DEPLOY, deployment_input.service_template, deployment_input.inputs)
+    result = invocation_service.invoke(OperationType.DEPLOY, deployment_input.service_template,
+                                       deployment_input.inputs, deployment_input.clean_state)
     return result, 200
 
 
 def undeploy():
     logger.debug("Entry: undeploy")
 
-    result = invocation_service.invoke(OperationType.UNDEPLOY, None, None)
+    result = invocation_service.invoke(OperationType.UNDEPLOY, None, None, None)
     return result, 200
 
 
@@ -40,7 +41,7 @@ def notify(trigger_name: str, body: bytes = None):
     logger.debug("Entry: notify")
     logger.debug("Body: %s", body.decode("UTF-8"))
 
-    result = invocation_service.invoke(OperationType.NOTIFY, trigger_name, body.decode("UTF-8"))
+    result = invocation_service.invoke(OperationType.NOTIFY, trigger_name, body.decode("UTF-8"), None)
     return result, 200
 
 

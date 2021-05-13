@@ -225,6 +225,8 @@ components:
           type: object
         service_template:
           type: string
+        clean_state:
+          type: boolean
     DeploymentOutput:
       description: Free-form mapping of outputs.
       type: object
@@ -252,6 +254,9 @@ components:
         inputs:
           description: Inputs provided for invocation.
           type: object
+        clean_state:
+          description: Whether a clean deployment was requested.
+          type: boolean
         instance_state:
           description: State of the instances defined in service template.
           type: object

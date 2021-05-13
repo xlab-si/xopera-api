@@ -1,4 +1,4 @@
-opera==0.6.5
+opera==0.6.6
 # enable building on alpine by avoiding rust
 cryptography==3.3.2
 
