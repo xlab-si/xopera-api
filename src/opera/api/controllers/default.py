@@ -83,7 +83,7 @@ def validate(body: DeploymentInput = None):
 
     result = ValidationResult()
     try:
-        opera_validate(deployment_input.service_template, deployment_input.inputs)
+        opera_validate(PurePath(deployment_input.service_template), deployment_input.inputs)
         result.success = True
     except Exception as e:
         result.success = False
