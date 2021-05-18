@@ -101,12 +101,7 @@ def info():
     except Exception as e:
         return {"message": "General error: {}".format(str(e))}, 500
 
-    serialized = Info(
-        service_template=str(result["service_template"]),
-        content_root=str(result["content_root"]),
-        inputs=result["inputs"],
-        status=result["status"]
-    )
+    serialized = Info(**result)
 
     return serialized, 200
 

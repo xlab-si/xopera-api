@@ -1,6 +1,6 @@
 openapi: "3.0.0"
 info:
-  version: 0.4.2
+  version: 0.4.3
   title: xOpera API
   license:
     name: Apache-2.0
@@ -298,6 +298,12 @@ components:
           type: object
         status:
           type: string
+        csar_metadata:
+          type: object
+        service_template_metadata:
+          type: object
+        csar_valid:
+          type: boolean
     InvocationState:
       type: string
       enum:
