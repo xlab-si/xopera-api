@@ -6,13 +6,14 @@ from opera.commands.init import init_compressed_csar as opera_init_compressed_cs
 from opera.commands.outputs import outputs as opera_outputs
 from opera.commands.package import package as opera_package
 from opera.commands.unpackage import unpackage as opera_unpackage
-from opera.commands.validate import validate_service_template as opera_validate
+from opera.commands.validate import validate_service_template as opera_validate_service_template
+from opera.commands.validate import validate_csar as opera_validate_csar
 from opera.storage import Storage
 
 from opera.api.controllers.background_invocation import InvocationService
 from opera.api.log import get_logger
 from opera.api.openapi.models import ValidationResult, OperationType, CsarInitializationInput, PackagingInput, \
-    UnpackagingInput, PackagingResult, Info
+    UnpackagingInput, PackagingResult, Info, CsarValidationInput
 from opera.api.openapi.models.deployment_input import DeploymentInput
 
 logger = get_logger(__name__)
@@ -76,14 +77,43 @@ def invocation_status(invocation_id):
 
 
 def validate(body: DeploymentInput = None):
-    logger.debug("Entry: validate")
+    logger.debug("Entry: validate (proxying to validate_service_template)")
+    return validate_service_template(body)
+
+
+def validate_service_template(body: dict = None):
+    logger.debug("Entry: validate_service_template")
     logger.debug(body)
 
     deployment_input = DeploymentInput.from_dict(body)
 
     result = ValidationResult()
     try:
-        opera_validate(PurePath(deployment_input.service_template), deployment_input.inputs)
+        opera_validate_service_template(PurePath(deployment_input.service_template), deployment_input.inputs)
+        result.success = True
+    except Exception as e:
+        result.success = False
+        result.message = "{}: {}\n\n{}".format(e.__class__.__name__, str(e), traceback.format_exc())
+
+    return result, 200
+
+
+def validate_csar(body: dict = None):
+    logger.debug("Entry: validate_csar")
+    logger.debug(body)
+
+    path = "."
+    inputs = None
+    if body:
+        csar_validation_input = CsarValidationInput.from_dict(body)
+        if csar_validation_input.csar_path:
+            # don't override with None
+            path = csar_validation_input.csar_path
+        inputs = csar_validation_input.inputs
+
+    result = ValidationResult()
+    try:
+        opera_validate_csar(PurePath(path), inputs)
         result.success = True
     except Exception as e:
         result.success = False

@@ -1,6 +1,6 @@
 openapi: "3.0.0"
 info:
-  version: 0.4.3
+  version: 0.4.4
   title: xOpera API
   license:
     name: Apache-2.0
@@ -84,7 +84,8 @@ paths:
           description: No outputs exist for this deployment.
   /validate:
     post:
-      summary: Validate a CSAR
+      deprecated: true
+      summary: Validate a service template (deprecated, use /validate/servicetemplate)
       operationId: validate
       requestBody:
         description: Validation inputs and service template name.
@@ -102,6 +103,46 @@ paths:
                 $ref: "#/components/schemas/ValidationResult"
         "500":
           description: There was an error starting validate operation.
+  /validate/servicetemplate:
+    post:
+      summary: Validate a service template
+      operationId: validateServiceTemplate
+      requestBody:
+        description: Validation inputs and service template name.
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeploymentInput"
+      responses:
+        "200":
+          description: The validation result.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationResult"
+        "500":
+          description: There was an error starting the validation.
+  /validate/csar:
+    post:
+      summary: Validate a CSAR
+      operationId: validateCsar
+      requestBody:
+        description: CSAR validation inputs.
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CsarValidationInput"
+      responses:
+        "200":
+          description: The validation result.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationResult"
+        "500":
+          description: There was an error starting the validation.
   /info:
     get:
       summary: Get information about the current opera environment
@@ -215,6 +256,14 @@ components:
           type: object
         clean:
           type: boolean
+    CsarValidationInput:
+      description: Parameters for CSAR validation.
+      type: object
+      properties:
+        csar_path:
+          type: string
+        inputs:
+          type: object
     DeploymentInput:
       description: Inputs and service template name for deploy and validate commands.
       type: object
