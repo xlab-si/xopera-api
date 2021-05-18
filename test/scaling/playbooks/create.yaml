@@ -12,3 +12,8 @@
     - name: Finish creating AWS Lambda
       debug:
         msg: "Created AWS Lambda."
+
+    - name: Set example attribute
+      set_stats:
+        data:
+          example_output: "i am an example!"

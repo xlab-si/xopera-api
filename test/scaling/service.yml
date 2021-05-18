@@ -3,6 +3,9 @@ tosca_definitions_version: tosca_simple_yaml_1_3
 node_types:
   radon.nodes.aws.AwsLambda:
     derived_from: tosca.nodes.SoftwareComponent
+    attributes:
+      example_output:
+        type: string
     interfaces:
       tosca.interfaces.node.lifecycle.Standard:
         inputs:
@@ -90,3 +93,8 @@ topology_template:
         type: radon.policies.scaling.ScaleUp
         properties:
           cpu_upper_bound: 90
+
+  outputs:
+    output_example:
+      description: Just an output example
+      value: { get_attribute: [ aws_lambda, example_output ] }
