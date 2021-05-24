@@ -9,8 +9,12 @@ from pathlib import Path
 from typing import List, Optional
 
 from opera.commands.deploy import deploy_service_template as opera_deploy
+from opera.commands.diff import diff_instances as opera_diff_instances
 from opera.commands.notify import notify as opera_notify
 from opera.commands.undeploy import undeploy as opera_undeploy
+from opera.commands.update import update as opera_update
+from opera.compare.instance_comparer import InstanceComparer
+from opera.compare.template_comparer import TemplateComparer
 from opera.storage import Storage
 
 from opera.api.log import get_logger
@@ -53,6 +57,8 @@ class InvocationWorkerProcess(multiprocessing.Process):
                 elif inv.operation == OperationType.NOTIFY:
                     # we abuse service_template and inputs a bit, but they match
                     InvocationWorkerProcess._notify(inv.service_template, inv.inputs)
+                elif inv.operation == OperationType.DEPLOY:
+                    InvocationWorkerProcess._update(inv.service_template, inv.inputs, num_workers=1)
                 else:
                     raise RuntimeError("Unknown operation type:" + str(inv.operation))
 
@@ -94,6 +100,24 @@ class InvocationWorkerProcess(multiprocessing.Process):
         opera_storage = Storage.create()
         opera_notify(opera_storage, verbose_mode=True,
                      trigger_name_or_event=event_name, notification_file_contents=notification_contents)
+
+    @staticmethod
+    def _update(service_template: str, inputs: typing.Optional[dict], num_workers: int):
+        original_storage = Storage.create()
+
+        new_storage = Storage.create(instance_path=".opera-api-update")
+        new_storage.write_json(inputs, "inputs")
+        new_storage.write(service_template, "root_file")
+
+        instance_diff = opera_diff_instances(
+            original_storage, ".", new_storage, ".",
+            TemplateComparer(), InstanceComparer(), True
+        )
+
+        opera_update(
+            original_storage, ".", new_storage, ".",
+            InstanceComparer(), instance_diff, True, num_workers, overwrite=True
+        )
 
     @staticmethod
     def read_file(filename):

@@ -1,6 +1,6 @@
 openapi: "3.0.0"
 info:
-  version: 0.5.0
+  version: 0.5.1
   title: xOpera API
   license:
     name: Apache-2.0
@@ -102,6 +102,26 @@ paths:
                 $ref: "#/components/schemas/DeploymentOutput"
         "404":
           description: No outputs exist for this deployment.
+  /update:
+    post:
+      summary: Do an update
+      operationId: update
+      requestBody:
+        description: Update inputs
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRequest"
+      responses:
+        "202":
+          description: Update successfully initiated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invocation"
+        "500":
+          description: There was an error initiating the update.
   /validate:
     post:
       deprecated: true
@@ -424,6 +444,7 @@ components:
         - deploy
         - undeploy
         - notify
+        - update
     OperationSuccess:
       description: A general success message.
       type: object
@@ -472,3 +493,16 @@ components:
           type: string
         csar:
           type: string
+    UpdateRequest:
+      description: Update request.
+      type: object
+      required:
+        - inputs
+        - newServiceTemplateContents
+      properties:
+        inputs:
+          type: object
+        newServiceTemplateContents:
+          description: The contents of the new service template.
+          type: string
+          format: bytes

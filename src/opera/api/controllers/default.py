@@ -1,5 +1,6 @@
 import tempfile
 import traceback
+from datetime import datetime
 from pathlib import PurePath
 
 from opera.commands.diff import diff_instances as opera_diff_instances
@@ -18,7 +19,7 @@ from opera.storage import Storage
 from opera.api.controllers.background_invocation import InvocationService
 from opera.api.log import get_logger
 from opera.api.openapi.models import ValidationResult, OperationType, CsarInitializationInput, PackagingInput, \
-    UnpackagingInput, PackagingResult, Info, CsarValidationInput, DiffRequest, Diff
+    UnpackagingInput, PackagingResult, Info, CsarValidationInput, DiffRequest, Diff, UpdateRequest
 from opera.api.openapi.models.deployment_input import DeploymentInput
 
 logger = get_logger(__name__)
@@ -33,7 +34,7 @@ def deploy(body: DeploymentInput = None):
     deployment_input = DeploymentInput.from_dict(body)
     result = invocation_service.invoke(OperationType.DEPLOY, deployment_input.service_template,
                                        deployment_input.inputs, deployment_input.clean_state)
-    return result, 200
+    return result, 202
 
 
 def diff(body: dict = None):
@@ -208,3 +209,17 @@ def unpackage(unpackaging_input: UnpackagingInput):
         return {"success": True, "message": ""}, 200
     except Exception as e:
         return {"success": False, "message": "General error: {}".format(str(e))}, 500
+
+
+def update(body: dict = None):  # noqa: E501
+    logger.debug("Entry: update")
+    update_request = UpdateRequest.from_dict(body)
+
+    posixnow = int(datetime.utcnow().timestamp())
+    with open("st-operaapi-update-{}.yml".format(posixnow)) as new_st_file:
+        new_st_file.write(update_request.new_service_template_contents)
+        new_st_filename = new_st_file.name
+
+    result = invocation_service.invoke(OperationType.UPDATE, new_st_filename, update_request.inputs, False)
+
+    return result, 202
