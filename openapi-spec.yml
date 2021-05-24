@@ -1,6 +1,6 @@
 openapi: "3.0.0"
 info:
-  version: 0.4.4
+  version: 0.5.0
   title: xOpera API
   license:
     name: Apache-2.0
@@ -25,6 +25,26 @@ paths:
                 $ref: "#/components/schemas/Invocation"
         "500":
           description: There was an error starting the deployment.
+  /diff:
+    post:
+      summary: Do a diff
+      operationId: diff
+      requestBody:
+        description: Diff inputs
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiffRequest"
+      responses:
+        "200":
+          description: Diff response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Diff"
+        "500":
+          description: There was an error performing the diff.
   /undeploy:
     post:
       summary: Undeploy a deployment
@@ -279,6 +299,44 @@ components:
     DeploymentOutput:
       description: Free-form mapping of outputs.
       type: object
+    Diff:
+      description: A diff.
+      type: object
+      required:
+        - added
+        - changed
+        - deleted
+      properties:
+        added:
+          type: array
+          items:
+            type: string
+        changed:
+          type: object
+        deleted:
+          type: array
+          items:
+            type: string
+    DiffRequest:
+      description: A diff request.
+      type: object
+      required:
+        - serviceTemplate
+        - inputs
+        - templateOnly
+        - newServiceTemplateContents
+      properties:
+        serviceTemplate:
+          description: The filename of the base service template.
+          type: string
+        inputs:
+          type: object
+        templateOnly:
+          type: boolean
+        newServiceTemplateContents:
+          description: The contents of the new service template.
+          type: string
+          format: bytes
     Invocation:
       description: An invocation of the deployment.
       type: object

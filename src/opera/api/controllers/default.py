@@ -1,19 +1,24 @@
+import tempfile
 import traceback
 from pathlib import PurePath
 
+from opera.commands.diff import diff_instances as opera_diff_instances
+from opera.commands.diff import diff_templates as opera_diff_templates
 from opera.commands.info import info as opera_info
 from opera.commands.init import init_compressed_csar as opera_init_compressed_csar
 from opera.commands.outputs import outputs as opera_outputs
 from opera.commands.package import package as opera_package
 from opera.commands.unpackage import unpackage as opera_unpackage
-from opera.commands.validate import validate_service_template as opera_validate_service_template
 from opera.commands.validate import validate_csar as opera_validate_csar
+from opera.commands.validate import validate_service_template as opera_validate_service_template
+from opera.compare.instance_comparer import InstanceComparer
+from opera.compare.template_comparer import TemplateComparer
 from opera.storage import Storage
 
 from opera.api.controllers.background_invocation import InvocationService
 from opera.api.log import get_logger
 from opera.api.openapi.models import ValidationResult, OperationType, CsarInitializationInput, PackagingInput, \
-    UnpackagingInput, PackagingResult, Info, CsarValidationInput
+    UnpackagingInput, PackagingResult, Info, CsarValidationInput, DiffRequest, Diff
 from opera.api.openapi.models.deployment_input import DeploymentInput
 
 logger = get_logger(__name__)
@@ -28,6 +33,41 @@ def deploy(body: DeploymentInput = None):
     deployment_input = DeploymentInput.from_dict(body)
     result = invocation_service.invoke(OperationType.DEPLOY, deployment_input.service_template,
                                        deployment_input.inputs, deployment_input.clean_state)
+    return result, 200
+
+
+def diff(body: dict = None):
+    logger.debug("Entry: diff")
+    diff_request = DiffRequest.from_dict(body)
+
+    try:
+        original_storage = Storage.create()
+        original_service_template = original_storage.read("root_file")
+        original_inputs = original_storage.read_json("inputs")
+
+        with tempfile.TemporaryDirectory(prefix=".opera-api-diff", dir=".") as new_storage_root:
+            new_storage = Storage.create(instance_path=new_storage_root)
+            with tempfile.NamedTemporaryFile(prefix="diff-service-template", dir=".") as new_service_template:
+                new_service_template.write(diff_request.new_service_template_contents)
+                new_service_template.flush()
+
+                if diff_request.template_only:
+                    diff_result = opera_diff_templates(original_service_template, ".", original_inputs,
+                                                       new_service_template.name, ".", diff_request.inputs,
+                                                       TemplateComparer(), True)
+                else:
+                    diff_result = opera_diff_instances(original_storage, ".", new_storage, ".",
+                                                       TemplateComparer(), InstanceComparer(), True)
+
+        result = Diff(
+            added=diff_result.added,
+            changed=diff_result.changed,
+            deleted=diff_result.deleted
+        )
+    except Exception as e:
+        logger.error("Error performing diff.", e)
+        return {"message": str(e)}, 500
+
     return result, 200
 
 
