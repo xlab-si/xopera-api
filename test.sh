@@ -28,7 +28,6 @@ docker-compose exec control curl --fail-with-body        api:8080/info
 
 validation_st='{"service_template": "service.yml", "inputs": {"some_input": "this is a value"}}'
 validation_csar='{"inputs": {"some_input": "this is a value"}}'
-docker-compose exec control curl --fail-with-body        api:8080/validate -H "Content-Type: application/json" -d "$validation_st"
 docker-compose exec control curl --fail-with-body        api:8080/validate/servicetemplate -H "Content-Type: application/json" -d "$validation_st"
 docker-compose exec control curl --fail-with-body        api:8080/validate/csar -H "Content-Type: application/json" -d "$validation_csar"
 
