@@ -1,7 +1,8 @@
-openapi: "3.0.0"
+openapi: "3.0.3"
 info:
-  version: 0.5.1
+  version: 0.5.2
   title: xOpera API
+  description: A stateful REST API for xOpera orchestrator
   license:
     name: Apache-2.0
 paths:
@@ -25,26 +26,6 @@ paths:
                 $ref: "#/components/schemas/Invocation"
         "500":
           description: There was an error starting the deployment.
-  /diff:
-    post:
-      summary: Do a diff
-      operationId: diff
-      requestBody:
-        description: Diff inputs
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/DiffRequest"
-      responses:
-        "200":
-          description: Diff response.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Diff"
-        "500":
-          description: There was an error performing the diff.
   /undeploy:
     post:
       summary: Undeploy a deployment
@@ -58,91 +39,6 @@ paths:
                 $ref: "#/components/schemas/Invocation"
         "500":
           description: There was an error starting the undeploy operation.
-  /status:
-    get:
-      summary: Fetch the status of a deployment
-      operationId: status
-      responses:
-        "200":
-          description: Asynchronous operation status history.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/InvocationHistory"
-  /status/{invocationId}:
-    parameters:
-      - name: invocationId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    get:
-      summary: Fetch the status of a particular invocation.
-      operationId: invocationStatus
-      responses:
-        "200":
-          description: An invocation status.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Invocation"
-        "404":
-          description: No invocation with this id.
-  /outputs:
-    get:
-      summary: Fetch deployment outputs
-      operationId: outputs
-      responses:
-        "200":
-          description: The outputs of the deployment.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DeploymentOutput"
-        "404":
-          description: No outputs exist for this deployment.
-  /update:
-    post:
-      summary: Do an update
-      operationId: update
-      requestBody:
-        description: Update inputs
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateRequest"
-      responses:
-        "202":
-          description: Update successfully initiated.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Invocation"
-        "500":
-          description: There was an error initiating the update.
-  /validate:
-    post:
-      deprecated: true
-      summary: Validate a service template (deprecated, use /validate/servicetemplate)
-      operationId: validate
-      requestBody:
-        description: Validation inputs and service template name.
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/DeploymentInput"
-      responses:
-        "200":
-          description: The validation result.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ValidationResult"
-        "500":
-          description: There was an error starting validate operation.
   /validate/servicetemplate:
     post:
       summary: Validate a service template
@@ -183,6 +79,19 @@ paths:
                 $ref: "#/components/schemas/ValidationResult"
         "500":
           description: There was an error starting the validation.
+  /outputs:
+    get:
+      summary: Fetch deployment outputs
+      operationId: outputs
+      responses:
+        "200":
+          description: The outputs of the deployment.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentOutput"
+        "404":
+          description: No outputs exist for this deployment.
   /info:
     get:
       summary: Get information about the current opera environment
@@ -194,27 +103,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Info"
-        "500":
-          description: General error.
-  /init:
-    post:
-      deprecated: true
-      summary: Initialize the CSAR for deployment. Deprecated in favour of unpacking and deploying the CSAR.
-      operationId: init
-      requestBody:
-        description: CSAR initialization parameters.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CsarInitializationInput"
-      responses:
-        "200":
-          description: CSAR successfully initialized.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/OperationSuccess"
         "500":
           description: General error.
   /package:
@@ -257,9 +145,49 @@ paths:
                 $ref: "#/components/schemas/OperationSuccess"
         "500":
           description: General error.
-  /notify/{triggerName}:
+  /diff:
+    post:
+      summary: Do a diff
+      operationId: diff
+      requestBody:
+        description: Diff inputs
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiffRequest"
+      responses:
+        "200":
+          description: Diff response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Diff"
+        "500":
+          description: There was an error performing the diff.
+  /update:
+    post:
+      summary: Do an update
+      operationId: update
+      requestBody:
+        description: Update inputs
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRequest"
+      responses:
+        "202":
+          description: Update successfully initiated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invocation"
+        "500":
+          description: There was an error initiating the update.
+  /notify/{trigger_name}:
     parameters:
-      - name: triggerName
+      - name: trigger_name
         in: path
         required: true
         schema:
@@ -282,20 +210,40 @@ paths:
                 $ref: "#/components/schemas/OperationSuccess"
         "500":
           description: General error.
-
+  /status:
+    get:
+      summary: Fetch the status of a deployment
+      operationId: status
+      responses:
+        "200":
+          description: Asynchronous operation status history.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvocationHistory"
+  /status/{invocation_id}:
+    parameters:
+      - name: invocation_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Fetch the status of a particular invocation.
+      operationId: invocationStatus
+      responses:
+        "200":
+          description: An invocation status.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invocation"
+        "404":
+          description: No invocation with this id.
 
 components:
   schemas:
-    CsarInitializationInput:
-      description: Inputs and service template name for deploy and validate commands.
-      type: object
-      required:
-        - clean
-      properties:
-        inputs:
-          type: object
-        clean:
-          type: boolean
     CsarValidationInput:
       description: Parameters for CSAR validation.
       type: object
@@ -465,7 +413,7 @@ components:
         output:
           type: string
         format:
-          $ref: "#/components/schemas/OperationType"
+          $ref: "#/components/schemas/PackagingFormat"
         service_template:
           type: string
         service_template_folder:
