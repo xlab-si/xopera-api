@@ -8,6 +8,8 @@ import uuid
 from pathlib import Path
 from typing import List, Optional
 
+from opera.api.log import get_logger
+from opera.api.openapi.models import Invocation, InvocationState, OperationType
 from opera.commands.deploy import deploy_service_template as opera_deploy
 from opera.commands.diff import diff_instances as opera_diff_instances
 from opera.commands.notify import notify as opera_notify
@@ -16,9 +18,6 @@ from opera.commands.update import update as opera_update
 from opera.compare.instance_comparer import InstanceComparer
 from opera.compare.template_comparer import TemplateComparer
 from opera.storage import Storage
-
-from opera.api.log import get_logger
-from opera.api.openapi.models import Invocation, InvocationState, OperationType
 
 logger = get_logger(__name__)
 

@@ -3,10 +3,14 @@ import traceback
 from datetime import datetime
 from pathlib import PurePath
 
+from opera.api.controllers.background_invocation import InvocationService
+from opera.api.log import get_logger
+from opera.api.openapi.models import ValidationResult, OperationType, PackagingInput, UnpackagingInput, \
+    PackagingResult, Info, CsarValidationInput, DiffRequest, Diff, UpdateRequest
+from opera.api.openapi.models.deployment_input import DeploymentInput
 from opera.commands.diff import diff_instances as opera_diff_instances
 from opera.commands.diff import diff_templates as opera_diff_templates
 from opera.commands.info import info as opera_info
-from opera.commands.init import init_compressed_csar as opera_init_compressed_csar
 from opera.commands.outputs import outputs as opera_outputs
 from opera.commands.package import package as opera_package
 from opera.commands.unpackage import unpackage as opera_unpackage
@@ -15,12 +19,6 @@ from opera.commands.validate import validate_service_template as opera_validate_
 from opera.compare.instance_comparer import InstanceComparer
 from opera.compare.template_comparer import TemplateComparer
 from opera.storage import Storage
-
-from opera.api.controllers.background_invocation import InvocationService
-from opera.api.log import get_logger
-from opera.api.openapi.models import ValidationResult, OperationType, CsarInitializationInput, PackagingInput, \
-    UnpackagingInput, PackagingResult, Info, CsarValidationInput, DiffRequest, Diff, UpdateRequest
-from opera.api.openapi.models.deployment_input import DeploymentInput
 
 logger = get_logger(__name__)
 
@@ -117,11 +115,6 @@ def invocation_status(invocation_id):
         return {"message": "No invocation with id {}".format(invocation_id)}, 404
 
 
-def validate(body: DeploymentInput = None):
-    logger.debug("Entry: validate (proxying to validate_service_template)")
-    return validate_service_template(body)
-
-
 def validate_service_template(body: dict = None):
     logger.debug("Entry: validate_service_template")
     logger.debug(body)
@@ -130,7 +123,8 @@ def validate_service_template(body: dict = None):
 
     result = ValidationResult()
     try:
-        opera_validate_service_template(PurePath(deployment_input.service_template), deployment_input.inputs)
+        opera_validate_service_template(PurePath(deployment_input.service_template), deployment_input.inputs, Storage,
+                                        False, False)
         result.success = True
     except Exception as e:
         result.success = False
@@ -154,7 +148,7 @@ def validate_csar(body: dict = None):
 
     result = ValidationResult()
     try:
-        opera_validate_csar(PurePath(path), inputs)
+        opera_validate_csar(PurePath(path), inputs, Storage, False, False)
         result.success = True
     except Exception as e:
         result.success = False
@@ -175,18 +169,6 @@ def info():
     serialized = Info(**result)
 
     return serialized, 200
-
-
-def init(csar_initialization_input: CsarInitializationInput):
-    logger.debug("Entry: init")
-
-    try:
-        opera_storage = Storage.create()
-        opera_init_compressed_csar(".", csar_initialization_input.inputs,
-                                   opera_storage, csar_initialization_input.clean)
-        return {"success": True, "message": ""}, 200
-    except Exception as e:
-        return {"success": False, "message": "General error: {}".format(str(e))}, 500
 
 
 def package(packaging_input: PackagingInput):
