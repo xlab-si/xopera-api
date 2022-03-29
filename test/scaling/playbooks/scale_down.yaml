@@ -5,9 +5,9 @@
       debug:
         msg: "Scaling down..."
 
-    - name: See what's in the notification file from monitoring that was supplied to opera notify (JSON decode version)
+    - name: See what's in the notification file from monitoring that was supplied to opera notify
       debug:
-        msg: "{{ notification | from_json }}"
+        msg: "{{ notification }}"
 
     - name: Finish scaling down
       debug:

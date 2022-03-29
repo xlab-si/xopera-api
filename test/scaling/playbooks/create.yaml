@@ -5,15 +5,6 @@
       debug:
         msg: "Creating AWS Lambda..."
 
-    - name: Display inputs
-      debug:
-        msg: "{{ some_input }}"
-
     - name: Finish creating AWS Lambda
       debug:
         msg: "Created AWS Lambda."
-
-    - name: Set example attribute
-      set_stats:
-        data:
-          example_output: "i am an example!"
