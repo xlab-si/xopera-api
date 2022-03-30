@@ -86,7 +86,7 @@ class InvocationWorkerProcess(multiprocessing.Process):
     @staticmethod
     def _deploy(service_template: str, inputs: typing.Optional[dict], num_workers: int, clean_state: bool):
         opera_storage = Storage.create()
-        opera_deploy(service_template, inputs, opera_storage,
+        opera_deploy(Path(service_template), inputs, opera_storage,
                      verbose_mode=True, num_workers=num_workers, delete_existing_state=clean_state)
 
     @staticmethod
@@ -97,8 +97,8 @@ class InvocationWorkerProcess(multiprocessing.Process):
     @staticmethod
     def _notify(event_name: str, notification_contents: Optional[str]):
         opera_storage = Storage.create()
-        opera_notify(opera_storage, verbose_mode=True,
-                     trigger_name_or_event=event_name, notification_file_contents=notification_contents)
+        opera_notify(opera_storage, verbose_mode=True, trigger_name_or_event=event_name,
+                     notification_file_contents=notification_contents)
 
     @staticmethod
     def _update(service_template: str, inputs: typing.Optional[dict], num_workers: int):
@@ -109,12 +109,12 @@ class InvocationWorkerProcess(multiprocessing.Process):
         new_storage.write(service_template, "root_file")
 
         instance_diff = opera_diff_instances(
-            original_storage, ".", new_storage, ".",
+            original_storage, Path("."), new_storage, Path("."),
             TemplateComparer(), InstanceComparer(), True
         )
 
         opera_update(
-            original_storage, ".", new_storage, ".",
+            original_storage, Path("."), new_storage, Path("."),
             InstanceComparer(), instance_diff, True, num_workers, overwrite=True
         )
 
@@ -160,7 +160,7 @@ class InvocationService:
         invocations = []
         for file_path in Path(".opera-api").glob('*.json'):
             logger.debug(file_path)
-            invocation = Invocation.from_dict(json.load(open(file_path, 'r')))
+            invocation = Invocation.from_dict(json.load(file_path.open(mode='r')))
 
             if invocation.state == InvocationState.IN_PROGRESS:
                 invocation.stdout = InvocationWorkerProcess.read_file(InvocationWorkerProcess.IN_PROGRESS_STDOUT_FILE)
@@ -206,7 +206,7 @@ class InvocationService:
     def get_instance_state(cls):
         json_dict = {}
         for file_path in Path(os.path.join('.opera', 'instances')).glob("*"):
-            parsed = json.load(open(file_path, 'r'))
+            parsed = json.load(file_path.open(mode='r'))
             component_name = parsed['tosca_name']['data']
             json_dict[component_name] = parsed['state']['data']
         return json_dict
