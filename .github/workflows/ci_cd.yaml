@@ -1,0 +1,73 @@
+name: cicd
+
+on: push
+
+jobs:
+  tests:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.10.4
+
+      - name: Generate OpenAPI base code
+        run: ./generate.sh
+
+      - name: Install local opera-api package
+        run: |
+          pip install --upgrade pip
+          pip install wheel
+          pip install .
+
+      - name: Install all test requiremements
+        run: pip install -r requirements-dev.txt
+
+      - name: Run integration tests
+        run: for d in tests/integration/*/; do (cd "$d" && ./runme.sh opera-api); done
+
+  release:
+    runs-on: ubuntu-20.04
+    needs: tests
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.10.4
+
+      - name: Install pypa/build
+        run: python -m pip install build --user
+
+      - name: Build a binary wheel and a source tarball
+        run: python -m build --sdist --wheel --outdir dist/ .
+
+      - name: Publish package to TestPyPI (for main branch)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: ${{ secrets.TEST_PYPI_USERNAME }}
+          password: ${{ secrets.TEST_PYPI_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
+          skip_existing: true
+
+      - name: Publish CLI package to PyPI (for tags)
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: ${{ secrets.PYPI_USERNAME }}
+          password: ${{ secrets.PYPI_TOKEN }}
+
+      - name: Draft a new Release (for tags)
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
