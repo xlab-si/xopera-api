@@ -1,5 +1,5 @@
-# java -jar openapi-generator-cli-4.3.0.jar config-help --generator-name python-flask --full-details
-# java -jar openapi-generator-cli-4.3.0.jar config-help --generator-name python-flask --format yamlsample
+# java -jar openapi-generator-cli-5.4.0.jar config-help --generator-name python-flask --full-details
+# java -jar openapi-generator-cli-5.4.0.jar config-help --generator-name python-flask --format yamlsample
 
 sortParamsByRequiredFlag: true
 # must be false, otherwise python files get sorted unintelligently, and commas in multiline lists don't match
