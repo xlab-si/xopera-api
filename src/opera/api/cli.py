@@ -17,8 +17,8 @@ def main():
         server = "tornado"
 
     app = connexion.App(__name__, specification_dir="./openapi/openapi/", server=server, options=dict(
-        serve_spec=True,
-        swagger_ui=True
+        serve_spec=DEBUG,
+        swagger_ui=DEBUG
     ))
     app.app.json_encoder = encoder.JSONEncoder
     app.add_api("openapi.yaml", arguments={"title": "xOpera API"}, pythonic_params=True)
