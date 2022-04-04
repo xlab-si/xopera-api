@@ -2,7 +2,7 @@ openapi: "3.0.3"
 info:
   version: 0.5.2
   title: xOpera API
-  description: A stateful REST API for xOpera orchestrator
+  description: A stateful xOpera API for orchestration environment (single user, single project, single deployment)
   license:
     name: Apache-2.0
 paths:
