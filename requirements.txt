@@ -1,13 +1,4 @@
-# Package building dependecies
-wheel==0.37.1
-setuptools>=61.2.0
-setuptools_scm>=6.4.2
-
-# API dependencies
 opera==0.6.8
 connexion[swagger-ui]==2.13.0
 python_dateutil==2.8.2
 tornado==6.1
-
-# Docker container dependecies - enable building on alpine by avoiding rust
-cryptography==3.3.2
