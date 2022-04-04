@@ -9,13 +9,13 @@ WORKDIR /app
 ENTRYPOINT ["python3"]
 CMD ["-m", "opera.api.cli"]
 
-COPY requirements.txt /app/
+COPY requirements-dev.txt /app/
 
 RUN export CRYPTOGRAPHY_PREREQS="gcc musl-dev libffi-dev openssl-dev python3-dev" \
     && export PIP_PREREQS="git" \
     && apk add $CRYPTOGRAPHY_PREREQS $PIP_PREREQS \
     && pip3 install --no-cache-dir wheel \
-    && pip3 install --no-cache-dir -r requirements.txt \
+    && pip3 install --no-cache-dir -r requirements-dev.txt \
     && apk del $CRYPTOGRAPHY_PREREQS $PIP_PREREQS \
     && rm requirements.txt
 
