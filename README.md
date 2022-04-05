@@ -1,6 +1,7 @@
 # xOpera API
 An HTTP API interface to the `opera` orchestrator - single user, single project, single deployment.
 
+[![cicd](https://github.com/xlab-si/xopera-api/actions/workflows/ci_cd.yaml/badge.svg)](https://github.com/xlab-si/xopera-api/actions/workflows/ci_cd.yaml)
 [![PyPI](https://img.shields.io/pypi/v/opera-api)](https://pypi.org/project/opera-api/)
 [![Test PyPI](https://img.shields.io/badge/test%20pypi-dev%20version-blueviolet)](https://test.pypi.org/project/opera-api/)
 
