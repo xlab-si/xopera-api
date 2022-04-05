@@ -3,7 +3,7 @@ services:
   api:
     image: xopera-api
     build:
-      context: ../../../
+      context: ../../
     environment:
       DEBUG: "true"
       LOG_LEVEL: debug
