@@ -170,7 +170,7 @@ Agreements No. 825040 ([RADON]), No. 825480 ([SODALITE]) and No. 101000162 ([PIA
 [xopera-opera]: https://github.com/xlab-si/xopera-opera
 [xopera-tosca-parser]: https://github.com/xlab-si/xopera-tosca-parser
 [xopera-examples]: https://github.com/xlab-si/xopera-examples
-[xOpera SaaS]: https://xlab-si.github.io/xopera-docs/saas.html
+[xOpera SaaS]: https://xlab-si.github.io/xopera-docs/04-saas.html
 [Apache License 2.0]: https://www.apache.org/licenses/LICENSE-2.0
 [xopera@xlab.si]: mailto:xopera@xlab.si
 [RADON]: http://radon-h2020.eu
