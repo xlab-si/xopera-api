@@ -92,6 +92,16 @@ Now open another terminal window and deploy the example through some API endpoin
 ```
 
 And that's it. 
+
+You can also run xOpera API in a Docker container (using public [ghcr.io/xlab-si/xopera-api] Docker image) and mount 
+your TOSCA CSAR:
+
+```console
+# run xOpera API in Docker and navigate to localhost:8080/swagger
+$ docker run --name xopera-api -p 8080:8080 -v $(pwd)/tests/integration/hello-world:/hello-world -e OPERA_API_DEBUG_MODE=true ghcr.io/xlab-si/xopera-api
+$ curl localhost:8080/status
+```
+
 If you wish to deploy another project navigate to its folder and run another instance of xOpera API. 
 If you want to use `opera` orchestrator (with xOpera CLI) go to [xopera-opera] repository. 
 If you want to use just xOpera TOSCA parser go to [xopera-tosca-parser] repository. 
@@ -152,6 +162,19 @@ python3 -m opera.api.cli
 curl localhost:8080
 ```
 
+You can also run in debug mode and use other env vars:
+
+```console
+(.venv) $ git clone git@github.com:xlab-si/xopera-api.git
+(.venv) $ cd xopera-api/tests/integration/hello-world
+(.venv) $ OPERA_API_DEBUG_MODE=true OPERA_API_PORT=8000 OPERA_API_SWAGGER_URL=docs opera-api
+2022-06-09 12:18:33,658 - INFO - opera.api.cli - Running in debug mode: flask backend.
+ * Serving Flask app 'opera.api.cli' (lazy loading)
+ ...
+(.venv) $ curl localhost:8000/version
+"0.6.9"
+```
+
 ## License
 This work is licensed under the [Apache License 2.0].
 
@@ -167,6 +190,7 @@ Agreements No. 825040 ([RADON]), No. 825480 ([SODALITE]) and No. 101000162 ([PIA
 [PyPI production]: https://pypi.org/project/opera-api/#history
 [PyPI development]: https://test.pypi.org/project/opera-api/#history
 [xopera-api]: https://github.com/xlab-si/xopera-api
+[ghcr.io/xlab-si/xopera-api]: https://github.com/xlab-si/xopera-api/pkgs/container/xopera-api
 [xopera-opera]: https://github.com/xlab-si/xopera-opera
 [xopera-tosca-parser]: https://github.com/xlab-si/xopera-tosca-parser
 [xopera-examples]: https://github.com/xlab-si/xopera-examples
