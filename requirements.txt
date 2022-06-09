@@ -1,4 +1,4 @@
-opera==0.6.8
-connexion[swagger-ui]==2.13.0
+opera==0.6.9
+connexion[swagger-ui]==2.13.1
 python_dateutil==2.8.2
 tornado==6.1
