@@ -3,10 +3,10 @@
 set -e
 set -u
 
-[ -f openapi-generator-cli-5.4.0.jar ] || wget https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/5.4.0/openapi-generator-cli-5.4.0.jar
+[ -f openapi-generator-cli-6.0.0.jar ] || wget https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/6.0.0/openapi-generator-cli-6.0.0.jar
 rm -rf gen/
 rm -rf src/opera/api/controllers/openapi/
-java -jar openapi-generator-cli-5.4.0.jar generate \
+java -jar openapi-generator-cli-6.0.0.jar generate \
     --input-spec openapi-spec.yml \
     --api-package api \
     --invoker-package invoker \
