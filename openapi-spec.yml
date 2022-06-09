@@ -1,11 +1,32 @@
 openapi: "3.0.3"
 info:
-  version: 0.5.2
+  version: 0.5.4
   title: xOpera API
   description: A stateful xOpera API for orchestration environment (single user, single project, single deployment)
   license:
     name: Apache-2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
 paths:
+  /validate:
+    post:
+      summary: Validate a service template
+      operationId: validate
+      requestBody:
+        description: Validation inputs and service template name.
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidationInput"
+      responses:
+        "200":
+          description: The validation result.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationResult"
+        "500":
+          description: There was an error starting the validation.
   /deploy:
     post:
       summary: Deploy a CSAR
@@ -39,46 +60,6 @@ paths:
                 $ref: "#/components/schemas/Invocation"
         "500":
           description: There was an error starting the undeploy operation.
-  /validate/servicetemplate:
-    post:
-      summary: Validate a service template
-      operationId: validateServiceTemplate
-      requestBody:
-        description: Validation inputs and service template name.
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/DeploymentInput"
-      responses:
-        "200":
-          description: The validation result.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ValidationResult"
-        "500":
-          description: There was an error starting the validation.
-  /validate/csar:
-    post:
-      summary: Validate a CSAR
-      operationId: validateCsar
-      requestBody:
-        description: CSAR validation inputs.
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CsarValidationInput"
-      responses:
-        "200":
-          description: The validation result.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ValidationResult"
-        "500":
-          description: There was an error starting the validation.
   /outputs:
     get:
       summary: Fetch deployment outputs
@@ -241,19 +222,33 @@ paths:
                 $ref: "#/components/schemas/Invocation"
         "404":
           description: No invocation with this id.
-
+  /version:
+    get:
+      summary: Get current opera version
+      operationId: version
+      responses:
+        "200":
+          description: The opera environment operation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Version"
+        "500":
+          description: General error.
 components:
   schemas:
-    CsarValidationInput:
-      description: Parameters for CSAR validation.
+    ValidationInput:
+      description: Input for validate command.
       type: object
+      required:
+        - service_template
       properties:
-        csar_path:
-          type: string
         inputs:
           type: object
+        service_template:
+          type: string
     DeploymentInput:
-      description: Inputs and service template name for deploy and validate commands.
+      description: Input for deploy command.
       type: object
       required:
         - service_template
@@ -454,3 +449,6 @@ components:
           description: The contents of the new service template.
           type: string
           format: bytes
+    Version:
+      description: Information about opera version.
+      type: string

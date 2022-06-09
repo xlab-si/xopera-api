@@ -1,12 +1,13 @@
 import tempfile
 import traceback
 from datetime import datetime
-from pathlib import PurePath
+from pathlib import PurePath, Path
 
+import pkg_resources
 from opera.api.controllers.background_invocation import InvocationService
 from opera.api.log import get_logger
-from opera.api.openapi.models import ValidationResult, OperationType, PackagingInput, UnpackagingInput, \
-    PackagingResult, Info, CsarValidationInput, DiffRequest, Diff, UpdateRequest
+from opera.api.openapi.models import ValidationInput, ValidationResult, OperationType, PackagingInput, UnpackagingInput, \
+    PackagingResult, Info, DiffRequest, Diff, UpdateRequest
 from opera.api.openapi.models.deployment_input import DeploymentInput
 from opera.commands.diff import diff_instances as opera_diff_instances
 from opera.commands.diff import diff_templates as opera_diff_templates
@@ -14,8 +15,7 @@ from opera.commands.info import info as opera_info
 from opera.commands.outputs import outputs as opera_outputs
 from opera.commands.package import package as opera_package
 from opera.commands.unpackage import unpackage as opera_unpackage
-from opera.commands.validate import validate_csar as opera_validate_csar
-from opera.commands.validate import validate_service_template as opera_validate_service_template
+from opera.commands.validate import validate as opera_validate
 from opera.compare.instance_comparer import InstanceComparer
 from opera.compare.template_comparer import TemplateComparer
 from opera.storage import Storage
@@ -51,11 +51,11 @@ def diff(body: dict = None):
                 new_service_template.flush()
 
                 if diff_request.template_only:
-                    diff_result = opera_diff_templates(original_service_template, ".", original_inputs,
-                                                       new_service_template.name, ".", diff_request.inputs,
-                                                       TemplateComparer(), True)
+                    diff_result = opera_diff_templates(original_service_template, Path("."), original_inputs,
+                                                       PurePath(new_service_template.name), Path("."),
+                                                       diff_request.inputs, TemplateComparer(), True)
                 else:
-                    diff_result = opera_diff_instances(original_storage, ".", new_storage, ".",
+                    diff_result = opera_diff_instances(original_storage, Path("."), new_storage, Path("."),
                                                        TemplateComparer(), InstanceComparer(), True)
 
         result = Diff(
@@ -106,6 +106,13 @@ def status():
     return history, 200
 
 
+def version():
+    try:
+        return pkg_resources.get_distribution("opera").version
+    except pkg_resources.DistributionNotFound as e:
+        return f"Error when retrieving current opera version: {e}"
+
+
 def invocation_status(invocation_id):
     logger.debug("Entry: invocation_status")
     history = invocation_service.invocation_history()
@@ -115,40 +122,15 @@ def invocation_status(invocation_id):
         return {"message": "No invocation with id {}".format(invocation_id)}, 404
 
 
-def validate_service_template(body: dict = None):
-    logger.debug("Entry: validate_service_template")
+def validate(body: dict = None):
+    logger.debug("Entry: validate")
     logger.debug(body)
 
-    deployment_input = DeploymentInput.from_dict(body)
+    validation_input = ValidationInput.from_dict(body)
 
     result = ValidationResult()
     try:
-        opera_validate_service_template(PurePath(deployment_input.service_template), deployment_input.inputs, Storage,
-                                        False, False)
-        result.success = True
-    except Exception as e:
-        result.success = False
-        result.message = "{}: {}\n\n{}".format(e.__class__.__name__, str(e), traceback.format_exc())
-
-    return result, 200
-
-
-def validate_csar(body: dict = None):
-    logger.debug("Entry: validate_csar")
-    logger.debug(body)
-
-    path = "."
-    inputs = None
-    if body:
-        csar_validation_input = CsarValidationInput.from_dict(body)
-        if csar_validation_input.csar_path:
-            # don't override with None
-            path = csar_validation_input.csar_path
-        inputs = csar_validation_input.inputs
-
-    result = ValidationResult()
-    try:
-        opera_validate_csar(PurePath(path), inputs, Storage, False, False)
+        opera_validate(PurePath(validation_input.service_template), validation_input.inputs, Storage, True, False)
         result.success = True
     except Exception as e:
         result.success = False
@@ -175,8 +157,8 @@ def package(packaging_input: PackagingInput):
     logger.debug("Entry: package")
 
     try:
-        path = opera_package(packaging_input.service_template_folder, packaging_input.output,
-                             packaging_input.service_template, str(packaging_input.format))
+        path = opera_package(PurePath(packaging_input.service_template_folder), packaging_input.output,
+                             PurePath(packaging_input.service_template), str(packaging_input.format))
         result = PackagingResult(path)
         return result, 200
     except Exception as e:
@@ -187,7 +169,7 @@ def unpackage(unpackaging_input: UnpackagingInput):
     logger.debug("Entry: package")
 
     try:
-        opera_unpackage(unpackaging_input.csar, unpackaging_input.destination)
+        opera_unpackage(PurePath(unpackaging_input.csar), PurePath(unpackaging_input.destination))
         return {"success": True, "message": ""}, 200
     except Exception as e:
         return {"success": False, "message": "General error: {}".format(str(e))}, 500

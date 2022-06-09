@@ -26,12 +26,11 @@ sleep 3
 
 # prepare request body
 service_template_body='{"service_template": "service.yaml", "inputs": {}}'
-csar_body='{"inputs": {}}'
 
 # test different API endpoints
+curl -s localhost:8080/version
 curl -s localhost:8080/info
-curl -s localhost:8080/validate/servicetemplate -H "Content-Type: application/json" -d "$service_template_body"
-curl -s localhost:8080/validate/csar -H "Content-Type: application/json" -d "$csar_body"
+curl -s localhost:8080/validate -H "Content-Type: application/json" -d "$service_template_body"
 curl -s -XPOST localhost:8080/deploy -H "Content-Type: application/json" -d "$service_template_body"
 wait_for_completion
 curl -s localhost:8080/status
