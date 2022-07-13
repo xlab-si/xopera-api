@@ -5,6 +5,7 @@ from opera.api.log import get_logger
 from opera.api.openapi import encoder
 
 DEBUG = os.getenv("OPERA_API_DEBUG_MODE", "false") == "true"
+WORKDIR = os.getenv("OPERA_API_WORKDIR", None)
 logger = get_logger(__name__)
 
 
@@ -22,11 +23,18 @@ def main():
             swagger_ui=DEBUG,
             swagger_url=os.getenv("OPERA_API_SWAGGER_URL", "swagger")
         ))
+
+        if WORKDIR:
+            try:
+                os.chdir(WORKDIR)
+            except OSError as e:
+                print(f"Cannot change working directory to {WORKDIR}, exception: {str(e)}")
+
         app.app.json_encoder = encoder.JSONEncoder
         app.add_api("openapi.yaml", arguments={"title": "xOpera API"}, pythonic_params=True)
         app.run(port=int(os.getenv("OPERA_API_PORT", 8080)), debug=DEBUG)
     except Exception as e:
-        print(f"Exception: {e}")
+        print(f"Exception: {str(e)}")
 
 
 if __name__ == "__main__":
