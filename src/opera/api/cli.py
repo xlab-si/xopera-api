@@ -1,5 +1,5 @@
 import os
-
+import shutil
 import connexion
 from opera.api.log import get_logger
 from opera.api.openapi import encoder
@@ -26,9 +26,9 @@ def main():
 
         if WORKDIR:
             try:
-                os.chdir(WORKDIR)
+                shutil.copytree(WORKDIR, os.getcwd(), dirs_exist_ok=True)
             except OSError as e:
-                print(f"Cannot change working directory to {WORKDIR}, exception: {str(e)}")
+                print(f"Cannot copy files from working directory {WORKDIR}, exception: {str(e)}")
 
         app.app.json_encoder = encoder.JSONEncoder
         app.add_api("openapi.yaml", arguments={"title": "xOpera API"}, pythonic_params=True)
