@@ -1,4 +1,4 @@
 # Package building dependecies
-wheel==0.37.1
+wheel==0.38.1
 setuptools>=62.3.3
 setuptools-scm>=6.4.2
